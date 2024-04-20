@@ -16,6 +16,7 @@ export const App = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState('');
   const [noMoreResults, setNoMoreResults] = useState(false);
+  // eslint-disable-next-line
   const [previousImages, setPreviousImages] = useState([]); // Dodany stan przechowujący poprzednie wyniki
 
   useEffect(() => {
