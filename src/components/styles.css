@@ -218,3 +218,10 @@ html {
   .loader {
     margin: auto;
   }
+
+  .info-noMoreResults {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Opcjonalne: ustaw wysokość, aby wyśrodkować pionowo */
+  }

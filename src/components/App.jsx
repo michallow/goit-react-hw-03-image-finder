@@ -7,7 +7,6 @@ import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 
 const API_KEY = '42459291-7f50c47c6b19e5b61fce58d70';
-const IMAGES_PER_PAGE = 12;
 
 export const App = () => {
   const [query, setQuery] = useState('');
@@ -16,7 +15,8 @@ export const App = () => {
   const [images, setImages] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState('');
-  const [noMoreImages, setNoMoreImages] = useState(false);
+  const [noMoreResults, setNoMoreResults] = useState(false);
+  const [previousImages, setPreviousImages] = useState([]); // Dodany stan przechowujący poprzednie wyniki
 
   useEffect(() => {
     if (query === '') return;
@@ -25,12 +25,15 @@ export const App = () => {
       setLoader(true);
       try {
         const response = await axios.get(
-          `https://pixabay.com/api/?q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=${IMAGES_PER_PAGE}`
+          `https://pixabay.com/api/?q=${query}&page=${page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
         );
-        setImages(prevImages =>
-          page === 1 ? response.data.hits : [...prevImages, ...response.data.hits]
-        );
-        setNoMoreImages(response.data.hits.length < IMAGES_PER_PAGE);
+        const newImages = response.data.hits;
+        if (newImages.length === 0) {
+          setNoMoreResults(true);
+        } else {
+          setImages(newImages);
+          setPreviousImages(prevImages => [...prevImages, ...newImages]); // Aktualizacja poprzednich wyników
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -43,11 +46,27 @@ export const App = () => {
   const handleSearch = searchQuery => {
     setQuery(searchQuery);
     setPage(1);
-    setNoMoreImages(false);
+    setNoMoreResults(false); // Resetowanie stanu informującego o braku kolejnych wyników
   };
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     setPage(prevPage => prevPage + 1);
+    setLoader(true);
+    try {
+      const response = await axios.get(
+        `https://pixabay.com/api/?q=${query}&page=${page + 1}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`
+      );
+      const newImages = response.data.hits;
+      if (newImages.length === 0) {
+        setNoMoreResults(true);
+      } else {
+        setImages(prevImages => [...prevImages, ...newImages]);
+        setPreviousImages(prevImages => [...prevImages, ...newImages]); // Aktualizacja poprzednich wyników
+      }
+    } catch (error) {
+      console.error('Error fetching more data:', error);
+    }
+    setLoader(false);
   };
 
   const handleImageClick = e => {
@@ -68,12 +87,11 @@ export const App = () => {
       ) : (
         <ImageGallery images={images} openModal={handleImageClick} />
       )}
-      {images.length === IMAGES_PER_PAGE && !noMoreImages && (
-        <Button onClick={handleLoadMore}>Load More</Button>
-      )}
+      {images.length > 0 && !noMoreResults && <Button onClick={handleLoadMore}>Load More</Button>}
       {showModal && (
         <Modal imageUrl={modalImageUrl} onClose={handleCloseModal} />
       )}
+      {noMoreResults && <p className="info-noMoreResults">No more results to display</p>}
     </div>
   );
 };

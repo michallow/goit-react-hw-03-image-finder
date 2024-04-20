@@ -10,6 +10,10 @@ export const Searchbar = ({ handleSearch }) => {
 
   const onSubmit = e => {
     e.preventDefault();
+    if (query.trim() === '') {
+      alert('Please enter a valid search term.');
+      return;
+    }
     handleSearch(query);
   };
 
@@ -23,8 +27,8 @@ export const Searchbar = ({ handleSearch }) => {
         <input
           className="searchForm-input"
           type="text"
-          autocomplete="off"
-          autofocus
+          autoComplete="off"
+          autoFocus
           placeholder="Search images and photos"
           value={query}
           onChange={onChange}
